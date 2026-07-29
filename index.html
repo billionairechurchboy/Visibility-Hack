@@ -15,6 +15,16 @@
   w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for( var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script") ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
   ttq.load('D9KVJSBC77U349A6OHRG');
   ttq.page();
+
+  ttq.track('ViewContent', {
+    contents: [{
+      content_id: 'visibility-blueprint',
+      content_type: 'product',
+      content_name: 'The Visibility Blueprint'
+    }],
+    value: 2000,
+    currency: 'NGN'
+  });
 }(window, document, 'ttq');
 </script>
 <!-- TikTok Pixel Code End -->
@@ -1072,6 +1082,14 @@
   const REGISTRATION_FEE_NGN = 2000; // Korapay takes the amount in naira, not kobo
   const WHATSAPP_GROUP_LINK = 'https://chat.whatsapp.com/HWZB0s1ST4R70ME2VV7rb2?s=cl&p=i&ilr=2&amv=1';
 
+  // ---------- SHA-256 helper (required by TikTok before passing PII to identify()) ----------
+  async function sha256Hex(value){
+    const normalized = String(value).trim().toLowerCase();
+    const encoded = new TextEncoder().encode(normalized);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   // ---------- Reserve modal ----------
   function openReserveModal(){
     document.getElementById('reserveModal').classList.add('open');
@@ -1079,8 +1097,13 @@
     document.getElementById('modalSuccessView').style.display = 'none';
     document.body.style.overflow = 'hidden';
     if(window.ttq){
+      ttq.track('ClickButton', {
+        contents: [{ content_id: 'visibility-blueprint', content_type: 'product', content_name: 'The Visibility Blueprint' }],
+        value: REGISTRATION_FEE_NGN,
+        currency: 'NGN'
+      });
       ttq.track('AddToCart', {
-        contents: [{ content_id: 'visibility-blueprint', content_name: 'The Visibility Blueprint' }],
+        contents: [{ content_id: 'visibility-blueprint', content_type: 'product', content_name: 'The Visibility Blueprint' }],
         value: REGISTRATION_FEE_NGN,
         currency: 'NGN'
       });
@@ -1091,7 +1114,7 @@
     document.body.style.overflow = '';
   }
 
-  function submitReserveForm(e){
+  async function submitReserveForm(e){
     e.preventDefault();
 
     const fullName = document.getElementById('fullName').value.trim();
@@ -1107,6 +1130,23 @@
     const reference = 'VB-' + Date.now();
 
     if(window.ttq){
+      // Identify the customer using SHA-256 hashed PII (never send raw email/phone)
+      const [hashedEmail, hashedPhone] = await Promise.all([
+        sha256Hex(email),
+        sha256Hex(whatsapp)
+      ]);
+      ttq.identify({
+        email: hashedEmail,
+        phone_number: hashedPhone,
+        external_id: reference
+      });
+
+      ttq.track('Lead', {
+        contents: [{ content_id: 'visibility-blueprint', content_type: 'product', content_name: 'The Visibility Blueprint' }],
+        value: REGISTRATION_FEE_NGN,
+        currency: 'NGN'
+      });
+
       ttq.track('InitiateCheckout', {
         contents: [{ content_id: 'visibility-blueprint', content_name: 'The Visibility Blueprint' }],
         value: REGISTRATION_FEE_NGN,
@@ -1137,12 +1177,12 @@
         });
         if(window.ttq){
           ttq.track('CompleteRegistration', {
-            contents: [{ content_id: 'visibility-blueprint', content_name: 'The Visibility Blueprint' }],
+            contents: [{ content_id: 'visibility-blueprint', content_type: 'product', content_name: 'The Visibility Blueprint' }],
             value: REGISTRATION_FEE_NGN,
             currency: 'NGN'
           });
           ttq.track('Purchase', {
-            contents: [{ content_id: 'visibility-blueprint', content_name: 'The Visibility Blueprint' }],
+            contents: [{ content_id: 'visibility-blueprint', content_type: 'product', content_name: 'The Visibility Blueprint' }],
             value: REGISTRATION_FEE_NGN,
             currency: 'NGN'
           });
