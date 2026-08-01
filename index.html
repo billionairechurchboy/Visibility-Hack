@@ -149,6 +149,47 @@
     text-align:left;justify-content:flex-start;
   }
 
+  /* ---------- Seat-filling tube ---------- */
+  .seat-tube-wrap{
+    margin-top:18px;
+    max-width:340px;
+  }
+  .cta-row + .seat-tube-wrap,
+  .hero-copy .seat-tube-wrap{
+    margin-left:0;margin-right:auto;
+  }
+  .story-cta .seat-tube-wrap{
+    margin-left:auto;margin-right:auto;
+  }
+  .seat-tube-label{
+    display:flex;justify-content:space-between;
+    font-family:'Poppins',sans-serif;
+    font-size:12px;font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .seat-tube-label .seat-tube-pct{color:var(--blue-deep);}
+  .seat-tube{
+    position:relative;
+    width:100%;height:14px;
+    border-radius:100px;
+    background:var(--tint);
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
+  .seat-tube-fill{
+    position:absolute;top:0;left:0;
+    height:100%;width:40%;
+    border-radius:100px;
+    background:linear-gradient(90deg, var(--blue), var(--blue-deep));
+    transition:width 1s linear;
+  }
+  .seat-tube-fill::after{
+    content:"";
+    position:absolute;top:0;left:0;right:0;bottom:0;
+    background:linear-gradient(90deg, rgba(255,255,255,.35), transparent 60%);
+  }
+
   /* ---------- Hero visual: sales growth mockup ---------- */
   .hero-visual{
     position:relative;z-index:2;
@@ -731,6 +772,16 @@
         <button class="btn-primary" onclick="document.getElementById('offer').scrollIntoView({behavior:'smooth'})">Reserve Your Seat</button>
         <a href="#speakers" class="btn-secondary">Meet The Speakers</a>
       </div>
+
+      <div class="seat-tube-wrap">
+        <div class="seat-tube-label">
+          <span>Seats filling up</span>
+          <span class="seat-tube-pct" id="seatTubeLabel1">40% full</span>
+        </div>
+        <div class="seat-tube">
+          <div class="seat-tube-fill" id="seatTubeFill1"></div>
+        </div>
+      </div>
     </div>
 
     <div class="hero-visual">
@@ -982,6 +1033,16 @@
 
     <div class="story-cta" style="margin-top:44px;">
       <button class="btn-primary" style="padding:18px 42px;font-size:16px;" onclick="openReserveModal()">Reserve Your Seat</button>
+
+      <div class="seat-tube-wrap">
+        <div class="seat-tube-label">
+          <span>Seats filling up</span>
+          <span class="seat-tube-pct" id="seatTubeLabel2">40% full</span>
+        </div>
+        <div class="seat-tube">
+          <div class="seat-tube-fill" id="seatTubeFill2"></div>
+        </div>
+      </div>
     </div>
 
     <div class="countdown" id="countdown" style="margin-top:32px;">
@@ -1047,12 +1108,13 @@
   });
 
   // ---------- Auto-resetting 3-day-5-hour countdown ----------
-  const CYCLE_MS = (3 * 24 + 5) * 60 * 60 * 1000; // 3 days, 5 hours
-  const CYCLE_ANCHOR = new Date('2026-07-29T11:57:07.000Z').getTime(); // cycle starts fresh from here
+  const CYCLE_MS = 4 * 24 * 60 * 60 * 1000; // 4 days
+  const CYCLE_ANCHOR = new Date('2026-08-01T05:37:43.000Z').getTime(); // cycle starts fresh from here
   function updateCountdown(){
     const now = Date.now();
     const elapsed = now - CYCLE_ANCHOR;
-    const remaining = CYCLE_MS - (((elapsed % CYCLE_MS) + CYCLE_MS) % CYCLE_MS);
+    const cyclePos = ((elapsed % CYCLE_MS) + CYCLE_MS) % CYCLE_MS; // ms elapsed since this cycle started
+    const remaining = CYCLE_MS - cyclePos;
     const days = Math.floor(remaining / (24*60*60*1000));
     const hours = Math.floor((remaining % (24*60*60*1000)) / (60*60*1000));
     const mins = Math.floor((remaining % (60*60*1000)) / (60*1000));
@@ -1072,6 +1134,17 @@
         mEl.textContent = pad(mins);
         sEl.textContent = pad(secs);
       }
+    });
+
+    // Seat tube: starts each cycle at 40% full, grows to 100% as the countdown runs out
+    const fillPct = 40 + 60 * (cyclePos / CYCLE_MS);
+    ['seatTubeFill1','seatTubeFill2'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.style.width = fillPct + '%';
+    });
+    ['seatTubeLabel1','seatTubeLabel2'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.textContent = Math.round(fillPct) + '% full';
     });
   }
   updateCountdown();
